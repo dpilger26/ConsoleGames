@@ -4,13 +4,20 @@
 #include <functional>
 #include <iostream>
 
-using CallbackType = std::function<void()>;
+tetris::controls::CallbackFunctionType leftButtonPressCallback =
+[]() noexcept -> void { std::cout << "Left arrow was pressed\n"; };
 
-CallbackType leftButtonPressCallback = []() noexcept -> void { std::cout << "Left arrow was pressed\n"; };
-CallbackType rightButtonPressCallback = []() noexcept -> void { std::cout << "Right arrow was pressed\n"; };
-CallbackType downButtonPressCallback = []() noexcept -> void { std::cout << "Down arrow was pressed\n"; };
-CallbackType aButtonPressCallback = []() noexcept -> void { std::cout << "A button was pressed\n"; };
-CallbackType sButtonPressCallback = []() noexcept -> void { std::cout << "B button was pressed\n"; };
+tetris::controls::CallbackFunctionType rightButtonPressCallback =
+[]() noexcept -> void { std::cout << "Right arrow was pressed\n"; };
+
+tetris::controls::CallbackFunctionType downButtonPressCallback =
+[]() noexcept -> void { std::cout << "Down arrow was pressed\n"; };
+
+tetris::controls::CallbackFunctionType aButtonPressCallback =
+[]() noexcept -> void { std::cout << "A button was pressed\n"; };
+
+tetris::controls::CallbackFunctionType sButtonPressCallback =
+[]() noexcept -> void { std::cout << "B button was pressed\n"; };
 
 int main()
 {

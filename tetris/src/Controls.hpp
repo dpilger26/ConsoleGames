@@ -13,25 +13,16 @@ namespace tetris::controls
 
     //============================================================================================
 
-    class ButtonCallbackBase
-    {
-    public:
-        virtual ~ButtonCallbackBase() = default;
-        virtual void operator()(bool isKeyDown) = 0;
-    };
-
-    //============================================================================================
-
     template<typename CallbackFunction,
         std::enable_if_t<std::is_invocable_v<CallbackFunction>, int> = 0>
-    class ButtonCallback final : public ButtonCallbackBase
+    class ButtonCallback
     {
     public:
         ButtonCallback(CallbackFunction callbackFunction) noexcept:
             callbackFunction_(callbackFunction)
         {}
 
-        void operator()(bool isKeyDown) override
+        void operator()(bool isKeyDown)
         {
             if (isKeyDownPrevious_ && isKeyDown)
             {
@@ -112,7 +103,7 @@ namespace tetris::controls
             sButtonCallback_(std::make_unique<Command<ButtonCallback<CallbackFunction>>>(sButtonCallback))
         {}
 
-        void handleInput()
+        void handleInput() const noexcept
         {
             leftArrowCallback_->execute(isPressed(Button::LEFT_ARROW));
             rightArrowCallback_->execute(isPressed(Button::RIGHT_ARROW));
@@ -128,7 +119,7 @@ namespace tetris::controls
         std::unique_ptr<CommandBase> aButtonCallback_;
         std::unique_ptr<CommandBase> sButtonCallback_;
 
-        bool isPressed(Button button)
+        bool isPressed(Button button) const noexcept
         {
             return (GetKeyState(static_cast<int>(button)) & 0x8000) != 0;
         }

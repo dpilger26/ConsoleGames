@@ -1,15 +1,19 @@
 #pragma once
 
-#include "Controls.h"
 #include "Tetrimino.hpp"
 
 #include <array>
 #include <cstdint>
+#include <iostream>
 
 //================================================================================================================
 
 namespace tetris
 {
+    enum class Direction { RIGHT, LEFT, DOWN };
+
+    //============================================================================================================
+
     template<std::size_t NumRows, std::size_t NumCols>
     class Board
     {
@@ -31,76 +35,151 @@ namespace tetris
             std::fill(board_.begin(), board_.end(), BLANK_TILE);
         }
 
-        bool canMove(const tetrimino::Tetrimino& shape, controls::Direction direction, const Point& topLeft)
+        bool moveTetrimino(const tetrimino::TetrimonoBase& shape,
+            Direction direction,
+            const Point& topLeft) noexcept
         {
-            bool ableToMove = false;
+            bool isFinalized = false;
+
             switch (direction)
             {
-                case controls::Direction::LEFT
+                case Direction::LEFT:
                 {
-                    ableToMove = canMoveLeft(shape, topLeft);
+                    isFinalized = moveDown(shape, topLeft);
+                    break;
                 }
-                case controls::Direction::RIGHT
+                case Direction::RIGHT:
                 {
-                    ableToMove = canMoveRight(shape, topLeft);
+                    moveRight(shape, topLeft);
+                    break;
                 }
-                case controls::Direction::DOWN
+                case Direction::DOWN:
                 {
-                    ableToMove = canMoveDown(shape, topLeft);
+                    moveLeft(shape, topLeft);
+                    break;
                 }
             }
 
-            return ableToMove;
+            return isFinalized;
         }
 
     private:
-        wchar_t& operator()(std::size_t row, std::size_t col)
+
+        wchar_t& operator()(std::size_t row, std::size_t col) noexcept
         {
-            return tiles_.at(NumCols * row + col);
+            return board_.at(NumCols * row + col);
         }
 
-        bool isOccupied(std::size_t row, std::size_t col)
+        bool isOccupied(std::size_t row, std::size_t col) const noexcept
         {
-            return this->operator()(row, col) == OCCUPIED_TILE;
+            return operator()(row, col) == OCCUPIED_TILE;
         }
 
-        bool canGoDown(const tetrimino::Tetrimino& shape, const Point& topLeft) const
+        void markOccupied(std::size_t row, std::size_t col) noexcept
+        {
+            operator()(row, col) == OCCUPIED_TILE;
+        }
+
+        bool moveDown(const tetrimino::TetrimonoBase& shape, const Point& topLeft) noexcept
         {
             if (topLeft.row + shape.numRows() == NUM_ROWS)
             {
-                return false;
+                return true;
             }
 
-            const auto lowerRow = topLeft.row + shape.numRows() - 1;
-            const auto underLowerRow = lowerRow - 1;
+            const auto shapeBottomRow = topLeft.row + shape.numRows() - 1;
+            const auto belowShapeBottomRow = shapeBottomRow + 1;
 
             for (std::size_t col = 0; col < shape.numCols(); ++col)
             {
-                if (shape.isOccupied(lowerRow, col) &&
-                    isOccupied(underLowerRow, col + topLeft.col))
+                if (shape.isOccupied(shapeBottomRow, col) &&
+                    isOccupied(belowShapeBottomRow, col + topLeft.col))
                 {
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            placeTetrimino(shape, topLeft);
+
+            return false;
         }
 
-        bool canGoLeft(const tetrimino::Tetrimino& shape, const Point& topLeft)
+        void moveLeft(const tetrimino::TetrimonoBase& shape, const Point& topLeft) noexcept
         {
+            if (topLeft.col == 0)
+            {
+                return;
+            }
 
+            const auto shapeLeftCol = topLeft.col;
+            const auto leftOfShapeLeftCol = shapeLeftCol - 1;
 
-            return true;
+            for (std::size_t row = 0; row < shape.numRows(); ++row)
+            {
+                if (shape.isOccupied(row, shapeLeftCol) &&
+                    isOccupied(row + topLeft.row, leftOfShapeLeftCol))
+                {
+                    return;
+                }
+            }
+
+            placeTetrimino(shape, topLeft);
         }
 
-        bool canGoRight(const tetrimino::Tetrimino& shape, const Point& topLeft)
+        void moveRight(const tetrimino::TetrimonoBase& shape, const Point& topLeft) noexcept
         {
+            if (topLeft.col + shape.numCols = NUM_COLS)
+            {
+                return;
+            }
 
+            const auto shapeRightCol = topLeft.col + shape.numCols();
+            const auto rightOfShapeRightCol = shapeRightCol + 1;
 
+            for (std::size_t row = 0; row < shape.numRows(); ++row)
+            {
+                if (shape.isOccupied(row, shapeRightCol) &&
+                    isOccupied(row + topLeft.row, rightOfShapeRightCol))
+                {
+                    return;
+                }
+            }
 
-            return true;
+            placeTetrimino(shape, topLeft);
+        }
+
+        void placeTetrimino(const tetrimino::TetrimonoBase& shape, const Point& topLeft) noexcept
+        {
+            for (std::size_t row = 0; row < shape.numRows(); ++row)
+            {
+                for (std::size_t col = 0; col < shape.numCols(); ++col)
+                {
+                    if (shape.isOccupied(row, col))
+                    {
+                        markOccupied(row + topLeft.row, col + topLeft.col);
+                    }
+                }
+            }
         }
 
         std::array<wchar_t, NumRows * NumCols>  board_;
     };
+
+    //============================================================================================================
+
+    template<std::size_t NumRows, std::size_t NumCols>
+    std::ostream& operator<<(std::ostream& ostream, const Board<NumRows, NumCols>& board) noexcept
+    {
+        for (std::size_t row = 0; row < NumRows; ++row)
+        {
+            for (std::size_t col = 0; col < NumCols; ++col)
+            {
+                std::cout << board(row, col);
+            }
+
+            std::cout << '\n';
+        }
+
+        return ostream;
+    }
 }

@@ -1,3 +1,4 @@
+#include "Board.hpp"
 #include "Controls.hpp"
 #include "Tetrimino.hpp"
 
